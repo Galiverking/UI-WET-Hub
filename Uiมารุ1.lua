@@ -2,6 +2,66 @@ if game.CoreGui:FindFirstChild("PepsiUi") then
     game.CoreGui:FindFirstChild("PepsiUi"):Destroy()
 end
 
+if not game:IsLoaded() then 
+    repeat game.Loaded:Wait()
+    until game:IsLoaded() 
+end
+repeat wait(1)
+    pcall(function()
+        if game:GetService("Players").LocalPlayer.PlayerGui.Main:FindFirstChild("ChooseTeam") then
+            if game:GetService("Players").LocalPlayer.PlayerGui.Main.ChooseTeam.Visible == true then
+                if _G.Team == "Marines" then
+                    for i,v in pairs(getconnections(game:GetService("Players").LocalPlayer.PlayerGui.Main.ChooseTeam.Container.Marines.Frame.ViewportFrame.TextButton.MouseButton1Click)) do
+                        v.Function()
+                    end
+                else
+                    for i,v in pairs(getconnections(game:GetService("Players").LocalPlayer.PlayerGui.Main.ChooseTeam.Container.Pirates.Frame.ViewportFrame.TextButton.MouseButton1Click)) do
+                        v.Function()
+                    end
+                end
+            end
+        end
+    end)
+until game.Players.localPlayer.Neutral == false
+if _G.Fast_Delay == nil then
+	_G.Fast_Delay = 0.3
+end
+spawn(function()
+    while true do wait()
+        getgenv().rejoin = game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(Kick)
+            if not _G.TP_Ser and _G.Rejoin then
+                if Kick.Name == 'ErrorPrompt' and Kick:FindFirstChild('MessageArea') and Kick.MessageArea:FindFirstChild("ErrorFrame") then
+                    game:GetService("TeleportService"):Teleport(game.PlaceId)
+                    wait(50)
+                end
+            end
+        end)
+    end
+end)
+local VirtualUser=game:service'VirtualUser'
+game:service'Players'.LocalPlayer.Idled:connect(function()
+	VirtualUser:CaptureController()
+	VirtualUser:ClickButton2(Vector2.new())
+end)
+
+spawn(function()
+	while wait(3) do
+		game:GetService'VirtualUser':CaptureController()
+	end
+end)
+
+Old_World = false
+New_World = false
+Three_World = false
+local placeId = game.PlaceId
+if placeId == 2753915549 then
+    Old_World = true
+elseif placeId == 4442272183 then
+    New_World = true
+elseif placeId == 7449423635 then
+    Three_World = true
+end
+
 local library = {
 	WorkspaceName = "Wet Hub BF",
 	flags = {},
@@ -5962,24 +6022,98 @@ local PepsiUi = library:CreateWindow({
     }
 })
 
+function AttackNoCD()
+	if not Auto_Farm_Bounty and not Auto_Farm_Fruit or Mix_Farm then
+		if not Auto_Raid then
+			local AC = CbFw2.activeController
+			for i = 1, 1 do 
+				local bladehit = require(game.ReplicatedStorage.CombatFramework.RigLib).getBladeHits(
+					plr.Character,
+					{plr.Character.HumanoidRootPart},
+					60
+				)
+				local cac = {}
+				local hash = {}
+				for k, v in pairs(bladehit) do
+					if v.Parent:FindFirstChild("HumanoidRootPart") and not hash[v.Parent] then
+						table.insert(cac, v.Parent.HumanoidRootPart)
+						hash[v.Parent] = true
+					end
+				end
+				bladehit = cac
+				if #bladehit > 0 then
+					local u8 = debug.getupvalue(AC.attack, 5)
+					local u9 = debug.getupvalue(AC.attack, 6)
+					local u7 = debug.getupvalue(AC.attack, 4)
+					local u10 = debug.getupvalue(AC.attack, 7)
+					local u12 = (u8 * 798405 + u7 * 727595) % u9
+					local u13 = u7 * 798405
+					(function()
+						u12 = (u12 * u9 + u13) % 1099511627776
+						u8 = math.floor(u12 / u9)
+						u7 = u12 - u8 * u9
+					end)()
+					u10 = u10 + 1
+					debug.setupvalue(AC.attack, 5, u8)
+					debug.setupvalue(AC.attack, 6, u9)
+					debug.setupvalue(AC.attack, 4, u7)
+					debug.setupvalue(AC.attack, 7, u10)
+					pcall(function()
+						if plr.Character:FindFirstChildOfClass("Tool") and AC.blades and AC.blades[1] then
+							AC.animator.anims.basic[1]:Play(0.01,0.01,0.01)
+							game:GetService("ReplicatedStorage").RigControllerEvent:FireServer("weaponChange",tostring(GetCurrentBlade()))
+							game.ReplicatedStorage.Remotes.Validator:FireServer(math.floor(u12 / 1099511627776 * 16777215), u10)
+							game:GetService("ReplicatedStorage").RigControllerEvent:FireServer("hit", bladehit, i, "")
+						end
+					end)
+				end
+			end
+		end
+	end
+	if Auto_Farm_Bounty or Auto_Farm_Fruit and not Mix_Farm then
+		local Fast = getupvalues(require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework))
+		local Lop = Fast[2]
+		Lop.activeController.timeToNextAttack = (-math.huge^math.huge*math.huge)
+		Lop.activeController.attacking = false
+		Lop.activeController.timeToNextBlock = 0
+		Lop.activeController.humanoid.AutoRotate = 80
+		Lop.activeController.increment = 3
+		Lop.activeController.blocking = false
+		Lop.activeController.hitboxMagnitude = 80
+	end
+end
+
 local Page = PepsiUi:CreateTab({
-    Name = "Page Name"
+    Name = "Test"
 })
 
 local TestTab = Page:CreateSection({
-    Name = "Tab Name", -- ชื่อ
+    Name = "Test", -- ชื่อ
     Side = "Left" -- ตำแหน่ง Left/Right
 })
-
+TestTab:AddLabel({
+	Name = "test fast attack"
+})
 TestTab:AddToggle({
-    Name = "Toggle",
+    Name = "fast attack",
 	Value = _G.ConfigToggle, -- ปรับค่าToggle true/false or Config
-    Callback = function(value)
-        _G.ConfigToggle = value
+    Callback = function(vu)
+        _G.ConfigToggle = vu
     end
 })
+spawn(function()
+	while wait(.5) do
+		pcall(function()
+			if _G.ConfigToggle then
+				repeat wait(_G.Fast_Delay)
+					AttackNoCD()
+				until not _G.ConfigToggle
+			end
+		end)
+	end
+end)
 
-local LabelByNino = TestTab:AddLabel({
+--[[local LabelByNino = TestTab:AddLabel({
     Name = "Label"
 })
 A = 0
@@ -6030,6 +6164,6 @@ TestTab:AddButton({
     Callback = function()
         -- Script
     end
-})
+})]]
 
 return library, library_flags, library.subs
